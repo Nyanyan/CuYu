@@ -1,15 +1,21 @@
-const int ports[1] = {A0};
-const int speaker = A2;
-const float tones[6] = {261.626, 293.665, 329.628, 369.994, 415.305, 466.164};
+const int ports[6] = {A0, A1, A2, A3, A4, A5};
+const int speaker = 3;
+const float tones[6] = {130.813, 146.832, 164.814, 184.997, 207.652, 233.082};
+const int threshold = 700;
+bool flag;
 
 void setup() {
-  for(int i = 0;i < 1;i++) pinMode(ports[i], INPUT);
+  for(int i = 0;i < 6;i++) pinMode(ports[i], INPUT);
   pinMode(speaker, OUTPUT);
 }
 
 void loop() {
-  for (int i = 0;i < 1;i++){
-    if (analogRead(ports[i]) < threshold) tone(speaker, tones[i]);
-    else noTone();
+  flag = false;
+  for (int i = 0;i < 6;i++){
+    if (analogRead(ports[i]) < threshold) {
+      tone(speaker, tones[i]);
+      flag = true;
+    }
   }
+  if (!flag) noTone(speaker);
 }
