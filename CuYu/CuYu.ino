@@ -79,5 +79,5 @@ void loop() {
   setupTimer(tmp1, tmp2);
   if (tmp1 == inf && tmp2 == inf) sleep_cnt++;
   else sleep_cnt = 0;
-  if (sleep_cnt > 7500) slp(); // 7500
+  if (sleep_cnt > 7500) slp(); // shutdown in 1 minute
 }
