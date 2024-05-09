@@ -1,5 +1,6 @@
 /*
     CuYu2 BLE test by Takuto Yamana (Nyanyan)
+    from BLE_write
 */
 /*
     Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleWrite.cpp
