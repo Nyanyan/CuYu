@@ -28,6 +28,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
       str[0] = ('a' + t);
       str[1] = '\0';
       pCharacteristic->setValue(str);
+      Serial.println(str);
 
       std::string value = pCharacteristic->getValue();
     }
@@ -35,6 +36,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 
 void setup() {
   Serial.begin(115200);
+  Serial.println("start!");
   
 
   BLEDevice::init("CuYu2");
