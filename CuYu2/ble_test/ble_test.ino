@@ -35,6 +35,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 
 void setup() {
   Serial.begin(115200);
+  
 
   BLEDevice::init("CuYu2");
   BLEServer *pServer = BLEDevice::createServer();
