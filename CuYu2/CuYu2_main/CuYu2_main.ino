@@ -133,8 +133,13 @@ bool manageSlave() {
     }
 
     Serial.print("Slave Status: ");
+    const uint8_t slave_mac_addr[6] = {0x48, 0x31, 0xb7, 0x3f, 0xbe, 0x01};
+    bool exists = true;
+    for(int i = 0; i < 6; ++i){
+      exists &= peer_addr[i] == slave_mac_addr[i];
+    }
     // check if the peer exists
-    bool exists = esp_now_is_peer_exist(slave.peer_addr);
+    //bool exists = esp_now_is_peer_exist(slave.peer_addr);
     if ( exists) {
       // Slave already paired.
       Serial.println("Already Paired");
@@ -196,44 +201,38 @@ void deletePeer() {
 
 // send data
 void sendData() {
-  const uint8_t slave_mac_addr[6] = {0x48, 0x31, 0xb7, 0x3f, 0xbe, 0x01};
   const uint8_t *peer_addr = slave.peer_addr;
-  bool mac_addr_correct = true;
-  for(int i = 0; i < 6; ++i){
-    mac_addr_correct &= peer_addr[i] == slave_mac_addr[i];
+  uint8_t data = 0;
+  for (int i = 0; i < N_FACES; ++i){
+    data <<= 1;
+    data |= hall_data[i];
+    Serial.print(hall_data[i]);
   }
-  if (mac_addr_correct){
-    uint8_t data = 0;
-    for (int i = 0; i < N_FACES; ++i){
-      data <<= 1;
-      data |= hall_data[i];
-      Serial.print(hall_data[i]);
-    }
-    Serial.println("");
-    uint8_t send_data[DATA_SIZE] = {'C', 'u', 'Y', 'u', '2', data};
-    Serial.print("Sending: "); Serial.println(data);
-    esp_err_t result = esp_now_send(peer_addr, send_data, sizeof(send_data[0]) * DATA_SIZE);
-    Serial.print("Send Status: ");
-    if (result == ESP_OK) {
-      Serial.println("Success");
-    } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
-      // How did we get so far!!
-      Serial.println("ESPNOW not Init.");
-    } else if (result == ESP_ERR_ESPNOW_ARG) {
-      Serial.println("Invalid Argument");
-    } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
-      Serial.println("Internal Error");
-    } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
-      Serial.println("ESP_ERR_ESPNOW_NO_MEM");
-    } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
-      Serial.println("Peer not found.");
-    } else {
-      Serial.println("Not sure what happened");
-    }
+  Serial.println("");
+  uint8_t send_data[DATA_SIZE] = {'C', 'u', 'Y', 'u', '2', data};
+  //Serial.print("Sending: "); Serial.println(data);
+  esp_err_t result = esp_now_send(peer_addr, send_data, sizeof(send_data[0]) * DATA_SIZE);
+  Serial.print("Send Status: ");
+  if (result == ESP_OK) {
+    Serial.println("Success");
+  } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
+    // How did we get so far!!
+    Serial.println("ESPNOW not Init.");
+  } else if (result == ESP_ERR_ESPNOW_ARG) {
+    Serial.println("Invalid Argument");
+  } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
+    Serial.println("Internal Error");
+  } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
+    Serial.println("ESP_ERR_ESPNOW_NO_MEM");
+  } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
+    Serial.println("Peer not found.");
+  } else {
+    Serial.println("Not sure what happened");
   }
 }
 
 // callback when data is sent from Master to Slave
+/*
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
@@ -241,6 +240,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   Serial.print("Last Packet Sent to: "); Serial.println(macStr);
   Serial.print("Last Packet Send Status: "); Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
+*/
 
 void setup() {
   for (int i = 0; i < N_FACES; ++i){
@@ -261,7 +261,7 @@ void setup() {
   InitESPNow();
   // Once ESPNow is successfully Init, we will register for Send CB to
   // get the status of Trasnmitted packet
-  esp_now_register_send_cb(OnDataSent);
+  //esp_now_register_send_cb(OnDataSent);
 }
 
 void loop() {
