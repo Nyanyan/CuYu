@@ -42,6 +42,11 @@ esp_now_peer_info_t slave;
 #define PRINTSCANRESULTS 0
 #define DELETEBEFOREPAIR 0
 
+#define N_FACES 6
+#define LED_PIN_R D7
+uint8_t hall_data[N_FACES] = {0, 0, 0, 0, 0, 0};
+const int hall_pin[N_FACES] = {D0, D1, D2, D3, D4, D5};
+
 // Init ESP Now with fallback
 void InitESPNow() {
   WiFi.disconnect();
@@ -188,30 +193,43 @@ void deletePeer() {
 }
 
 #define DATA_SIZE 6
-uint8_t data = 0;
+
 // send data
 void sendData() {
-  ++data;
+  const uint8_t slave_mac_addr[6] = {0x48, 0x31, 0xb7, 0x3f, 0xbe, 0x01};
   const uint8_t *peer_addr = slave.peer_addr;
-  uint8_t send_data[DATA_SIZE] = {'C', 'u', 'Y', 'u', '2', data};
-  Serial.print("Sending: "); Serial.println(data);
-  esp_err_t result = esp_now_send(peer_addr, send_data, sizeof(send_data[0]) * DATA_SIZE);
-  Serial.print("Send Status: ");
-  if (result == ESP_OK) {
-    Serial.println("Success");
-  } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
-    // How did we get so far!!
-    Serial.println("ESPNOW not Init.");
-  } else if (result == ESP_ERR_ESPNOW_ARG) {
-    Serial.println("Invalid Argument");
-  } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
-    Serial.println("Internal Error");
-  } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
-    Serial.println("ESP_ERR_ESPNOW_NO_MEM");
-  } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
-    Serial.println("Peer not found.");
-  } else {
-    Serial.println("Not sure what happened");
+  bool mac_addr_correct = true;
+  for(int i = 0; i < 6; ++i){
+    mac_addr_correct &= peer_addr[i] == slave_mac_addr[i];
+  }
+  if (mac_addr_correct){
+    uint8_t data = 0;
+    for (int i = 0; i < N_FACES; ++i){
+      data <<= 1;
+      data |= hall_data[i];
+      Serial.print(hall_data[i]);
+    }
+    Serial.println("");
+    uint8_t send_data[DATA_SIZE] = {'C', 'u', 'Y', 'u', '2', data};
+    Serial.print("Sending: "); Serial.println(data);
+    esp_err_t result = esp_now_send(peer_addr, send_data, sizeof(send_data[0]) * DATA_SIZE);
+    Serial.print("Send Status: ");
+    if (result == ESP_OK) {
+      Serial.println("Success");
+    } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
+      // How did we get so far!!
+      Serial.println("ESPNOW not Init.");
+    } else if (result == ESP_ERR_ESPNOW_ARG) {
+      Serial.println("Invalid Argument");
+    } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
+      Serial.println("Internal Error");
+    } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
+      Serial.println("ESP_ERR_ESPNOW_NO_MEM");
+    } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
+      Serial.println("Peer not found.");
+    } else {
+      Serial.println("Not sure what happened");
+    }
   }
 }
 
@@ -225,6 +243,12 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 }
 
 void setup() {
+  for (int i = 0; i < N_FACES; ++i){
+    pinMode(hall_pin[i], INPUT);
+  }
+  pinMode(LED_PIN_R, OUTPUT);
+  digitalWrite(LED_PIN_R, LOW);
+
   Serial.begin(115200);
   //Set device in STA mode to begin with
   WiFi.mode(WIFI_STA);
@@ -262,6 +286,10 @@ void loop() {
     // No slave found to process
   }
 
+  for (int i = 0; i < N_FACES; ++i){
+    hall_data[i] = digitalRead(hall_pin[i]);
+  }
+
   // wait for 3seconds to run the logic again
-  delay(3000);
+  //delay(100);
 }
