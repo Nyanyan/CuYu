@@ -65,6 +65,8 @@ void configDeviceAP() {
 }
 
 void setup() {
+  pinMode(A0, INPUT);
+
   Serial.begin(115200);
   Serial.println("ESPNow/Basic/Slave Example");
   //Set device in AP mode to begin with
