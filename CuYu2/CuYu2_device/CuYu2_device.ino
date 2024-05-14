@@ -37,6 +37,8 @@
 
 #define CHANNEL 1
 
+#define N_FACES 6
+
 // Init ESP Now with fallback
 void InitESPNow() {
   WiFi.disconnect();
@@ -82,7 +84,6 @@ void setup() {
   esp_now_register_recv_cb(OnDataRecv);
 }
 
-#define DATA_SIZE 6
 // callback when data is recv from Master
 void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   //char macStr[18];
@@ -91,11 +92,10 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   //Serial.print("Last Packet Recv from: "); Serial.println(macStr);
   //Serial.print("Last Packet Recv Data: ");
   //Serial.print("CuYu2_data ");
-  for (int i = 0; i < DATA_SIZE - 1; ++i){
+  for (int i = 0; i < N_FACES; ++i){
     Serial.print((char)data[i]);
+    Serial.print(' ');
   }
-  Serial.print(' ');
-  Serial.print(data[DATA_SIZE - 1]);
   Serial.println("");
 }
 

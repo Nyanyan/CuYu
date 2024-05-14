@@ -71,8 +71,6 @@ void InitESPNow() {
   }
 }
 
-#define DATA_SIZE 6
-
 void setup() {
   for (int i = 0; i < N_FACES; ++i){
     pinMode(hall_pin[i], INPUT);
@@ -129,15 +127,16 @@ void loop() {
   const uint8_t *peer_addr = slave.peer_addr;
   last_hall_data = data;
   data = 0;
+  uint8_t send_data[N_FACES];
   for (int i = 0; i < N_FACES; ++i){
     data <<= 1;
     data |= hall_data[i];
+    send_data[i] = '0' + hall_data[i];
     Serial.print(hall_data[i]);
   }
   Serial.print(" ");
   Serial.println(data);
-  uint8_t send_data[DATA_SIZE] = {'C', 'u', 'Y', 'u', '2', data};
-  esp_err_t result = esp_now_send(peer_addr, send_data, sizeof(send_data[0]) * DATA_SIZE);
+  esp_err_t result = esp_now_send(peer_addr, send_data, sizeof(send_data[0]) * N_FACES);
   //Serial.print("Send Status: ");
   if (result == ESP_OK) {
     data_status = STATUS_SEND_SUCCESS;
