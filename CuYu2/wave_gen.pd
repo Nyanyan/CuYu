@@ -1,4 +1,4 @@
-#N canvas 659 254 906 720 10;
+#N canvas 408 389 906 720 10;
 #X obj 107 6 inlet;
 #X obj 73 505 outlet~;
 #X obj -17 106 phasor~;
@@ -14,7 +14,7 @@
 #X text 35 83 ノコギリ波;
 #X text 211 83 三角波;
 #X obj -17 141 hip~ 5;
-#X connect 0 0 2 0;
+#X connect 0 0 3 0;
 #X connect 2 0 14 0;
 #X connect 3 0 4 0;
 #X connect 3 0 5 0;
@@ -25,4 +25,4 @@
 #X connect 8 0 10 0;
 #X connect 9 0 10 0;
 #X connect 10 0 11 0;
-#X connect 14 0 1 0;
+#X connect 11 0 1 0;
