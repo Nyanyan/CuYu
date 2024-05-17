@@ -126,18 +126,23 @@ void loop() {
   const uint8_t *peer_addr = slave.peer_addr;
   last_hall_data_bit = hall_data_bit;
   hall_data_bit = 0;
-  uint8_t send_data[N_FACES];
+  //uint8_t send_data[N_FACES];
   for (int i = 0; i < N_FACES; ++i){
     hall_data_bit <<= 1;
     hall_data_bit |= hall_data[i];
-    send_data[i] = '0' + hall_data[i];
-    Serial.print(hall_data[i]);
+    //send_data[i] = '0' + hall_data[i];
+    //Serial.print(hall_data[i]);
   }
-  Serial.print(" ");
-  Serial.println(hall_data_bit);
+  //Serial.print(" ");
+  //Serial.println(hall_data_bit);
   if (hall_data_bit != last_hall_data_bit || data_status == STATUS_SEND_FAILED){
-    esp_err_t result = esp_now_send(peer_addr, send_data, sizeof(send_data[0]) * N_FACES);
-    //Serial.print("Send Status: ");
+    for (int i = 0; i < N_FACES; ++i){
+      Serial.print(hall_data[i]);
+    }
+    Serial.print(" ");
+    Serial.println(hall_data_bit);
+    //esp_err_t result = esp_now_send(peer_addr, send_data, sizeof(send_data[0]) * N_FACES);
+    esp_err_t result = esp_now_send(peer_addr, &hall_data_bit, sizeof(hall_data_bit));
     if (result == ESP_OK) {
       data_status = STATUS_SEND_SUCCESS;
       Serial.println("Success");

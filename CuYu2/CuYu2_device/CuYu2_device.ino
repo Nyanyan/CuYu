@@ -91,9 +91,16 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   //         mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
   //Serial.print("Last Packet Recv from: "); Serial.println(macStr);
   //Serial.print("Last Packet Recv Data: ");
-  //Serial.print("CuYu2_data ");
+  /*
   for (int i = 0; i < N_FACES; ++i){
     Serial.print((char)data[i]);
+    Serial.print(' ');
+  }
+  Serial.println("");
+  */
+  for (int i = 0; i < N_FACES; ++i){
+    uint8_t bit = 1 & (data[0] >> (N_FACES - 1 - i));
+    Serial.print(bit);
     Serial.print(' ');
   }
   Serial.println("");
