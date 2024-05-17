@@ -92,7 +92,7 @@ void deep_sleep() {
 
 void setup() {
   for (int i = 0; i < N_FACES; ++i){
-    pinMode(hall_pin[i], INPUT);
+    pinMode(hall_pin[i], INPUT_PULLUP);
   }
   pinMode(LED_PIN_R, OUTPUT);
   pinMode(LED_PIN_G, OUTPUT);
