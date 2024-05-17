@@ -126,22 +126,15 @@ void loop() {
   const uint8_t *peer_addr = slave.peer_addr;
   last_hall_data_bit = hall_data_bit;
   hall_data_bit = 0;
-  //uint8_t send_data[N_FACES];
   for (int i = 0; i < N_FACES; ++i){
-    hall_data_bit <<= 1;
-    hall_data_bit |= hall_data[i];
-    //send_data[i] = '0' + hall_data[i];
-    //Serial.print(hall_data[i]);
+    hall_data_bit |= hall_data[i] << i;
   }
-  //Serial.print(" ");
-  //Serial.println(hall_data_bit);
   if (hall_data_bit != last_hall_data_bit || data_status == STATUS_SEND_FAILED){
     for (int i = 0; i < N_FACES; ++i){
       Serial.print(hall_data[i]);
     }
     Serial.print(" ");
     Serial.println(hall_data_bit);
-    //esp_err_t result = esp_now_send(peer_addr, send_data, sizeof(send_data[0]) * N_FACES);
     esp_err_t result = esp_now_send(peer_addr, &hall_data_bit, sizeof(hall_data_bit));
     if (result == ESP_OK) {
       data_status = STATUS_SEND_SUCCESS;
@@ -174,25 +167,25 @@ void loop() {
       bool led_red = false;
       bool led_green = false;
       bool led_blue = false;
-      if (1 & (hall_data_bit >> (5 - FACE_IDX_WHITE))){
+      if (1 & (hall_data_bit >> FACE_IDX_WHITE)){
         led_red = true;
         led_green = true;
         led_blue = true;
       }
-      if (1 & (hall_data_bit >> (5 - FACE_IDX_YELLOW))){
+      if (1 & (hall_data_bit >> FACE_IDX_YELLOW)){
         led_red = true;
         led_green = true;
       }
-      if (1 & (hall_data_bit >> (5 - FACE_IDX_GREEN))){
+      if (1 & (hall_data_bit >> FACE_IDX_GREEN)){
         led_green = true;
       }
-      if (1 & (hall_data_bit >> (5 - FACE_IDX_BLUE))){
+      if (1 & (hall_data_bit >> FACE_IDX_BLUE)){
         led_blue = true;
       }
-      if (1 & (hall_data_bit >> (5 - FACE_IDX_RED))){
+      if (1 & (hall_data_bit >> FACE_IDX_RED)){
         led_red = true;
       }
-      if (1 & (hall_data_bit >> (5 - FACE_IDX_ORAGNE))){
+      if (1 & (hall_data_bit >> FACE_IDX_ORAGNE)){
         led_red = true;
         led_blue = true;
       }

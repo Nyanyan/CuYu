@@ -99,7 +99,7 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   Serial.println("");
   */
   for (int i = 0; i < N_FACES; ++i){
-    uint8_t bit = 1 & (data[0] >> (N_FACES - 1 - i));
+    uint8_t bit = 1 & (data[0] >> i);
     Serial.print(bit);
     Serial.print(' ');
   }
