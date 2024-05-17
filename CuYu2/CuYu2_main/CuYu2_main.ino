@@ -135,7 +135,6 @@ void loop() {
   }
 
   // send data
-  const uint8_t *peer_addr = slave.peer_addr;
   last_hall_data_bit = hall_data_bit;
   hall_data_bit = 0;
   for (int i = 0; i < N_FACES; ++i){
@@ -147,7 +146,7 @@ void loop() {
     }
     Serial.print(" ");
     Serial.println(hall_data_bit);
-    esp_err_t result = esp_now_send(peer_addr, &hall_data_bit, sizeof(hall_data_bit));
+    esp_err_t result = esp_now_send(slave.peer_addr, &hall_data_bit, sizeof(hall_data_bit));
     if (result == ESP_OK) {
       data_status = STATUS_SEND_SUCCESS;
       Serial.println("Success");
