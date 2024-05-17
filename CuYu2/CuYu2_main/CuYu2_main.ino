@@ -59,9 +59,12 @@ const int hall_pin[N_FACES] = {D4, D2, D3, D1, D0, D5};
 #define STATUS_SEND_SUCCESS 0
 #define STATUS_SEND_FAILED 1
 
+#define DEEP_SLEEP_TIME_THRESHOLD 10000 // ms
+
 uint8_t last_hall_data_bit = 0b11111111;
 uint8_t hall_data_bit = 0;
 int data_status = STATUS_SEND_FAILED;
+unsigned long last_turned = 0;
 
 // Init ESP Now with fallback
 void InitESPNow() {
@@ -80,14 +83,15 @@ void InitESPNow() {
 
 void deep_sleep() {
   Serial.println("sleep...");
-  //esp_bluedroid_disable();
-  //esp_bt_controller_disable();
   esp_wifi_stop();
+  digitalWrite(LED_PIN_R, LOW);
+  digitalWrite(LED_PIN_G, LOW);
+  digitalWrite(LED_PIN_B, LOW);
   esp_deep_sleep_enable_gpio_wakeup(
-    BIT(GPIO_NUM_2) | BIT(GPIO_NUM_3) | BIT(GPIO_NUM_4) | 
-    BIT(GPIO_NUM_5) | BIT(GPIO_NUM_6) | BIT(GPIO_NUM_7), 
+    BIT(GPIO_NUM_2) | BIT(GPIO_NUM_3) | BIT(GPIO_NUM_4) | BIT(GPIO_NUM_5), 
     ESP_GPIO_WAKEUP_GPIO_LOW);
   esp_deep_sleep_start();
+  Serial.println("wake");
 }
 
 void setup() {
@@ -126,6 +130,11 @@ void setup() {
       Serial.println("Cannot Pair");
     }
   }
+
+  last_hall_data_bit = 0b11111111;
+  hall_data_bit = 0;
+  data_status = STATUS_SEND_FAILED;
+  last_turned = millis();
 }
 
 void loop() {
@@ -141,6 +150,7 @@ void loop() {
     hall_data_bit |= hall_data[i] << i;
   }
   if (hall_data_bit != last_hall_data_bit || data_status == STATUS_SEND_FAILED){
+    last_turned = millis();
     for (int i = 0; i < N_FACES; ++i){
       Serial.print(hall_data[i]);
     }
@@ -167,8 +177,8 @@ void loop() {
         Serial.println("Not sure what happened");
       }
     }
-  } else{ // sleep
-    //deep_sleep(); // under construction
+  } else if (hall_data_bit == 0 && millis() - last_turned > DEEP_SLEEP_TIME_THRESHOLD){ // sleep
+    deep_sleep();
   }
 
   if (data_status == STATUS_SEND_FAILED){
