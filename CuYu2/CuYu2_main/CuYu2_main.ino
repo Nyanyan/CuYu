@@ -112,9 +112,9 @@ void setup() {
 #define STATUS_SEND_SUCCESS 0
 #define STATUS_SEND_FAILED 1
 
-int led_status = 0;
-uint8_t last_hall_data = 0b11111111;
-uint8_t data = 0;
+uint8_t last_hall_data_bit = 0b11111111;
+uint8_t hall_data_bit = 0;
+int data_status = STATUS_SEND_FAILED;
 
 void loop() {
   // update data
@@ -123,39 +123,40 @@ void loop() {
   }
 
   // send data
-  int data_status = STATUS_SEND_FAILED;
   const uint8_t *peer_addr = slave.peer_addr;
-  last_hall_data = data;
-  data = 0;
+  last_hall_data_bit = hall_data_bit;
+  hall_data_bit = 0;
   uint8_t send_data[N_FACES];
   for (int i = 0; i < N_FACES; ++i){
-    data <<= 1;
-    data |= hall_data[i];
+    hall_data_bit <<= 1;
+    hall_data_bit |= hall_data[i];
     send_data[i] = '0' + hall_data[i];
     Serial.print(hall_data[i]);
   }
   Serial.print(" ");
-  Serial.println(data);
-  esp_err_t result = esp_now_send(peer_addr, send_data, sizeof(send_data[0]) * N_FACES);
-  //Serial.print("Send Status: ");
-  if (result == ESP_OK) {
-    data_status = STATUS_SEND_SUCCESS;
-    Serial.println("Success");
-  } else {
-    data_status = STATUS_SEND_FAILED;
-    if (result == ESP_ERR_ESPNOW_NOT_INIT) {
-      // How did we get so far!!
-      Serial.println("ESPNOW not Init.");
-    } else if (result == ESP_ERR_ESPNOW_ARG) {
-      Serial.println("Invalid Argument");
-    } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
-      Serial.println("Internal Error");
-    } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
-      Serial.println("ESP_ERR_ESPNOW_NO_MEM");
-    } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
-      Serial.println("Peer not found.");
+  Serial.println(hall_data_bit);
+  if (hall_data_bit != last_hall_data_bit || data_status == STATUS_SEND_FAILED){
+    esp_err_t result = esp_now_send(peer_addr, send_data, sizeof(send_data[0]) * N_FACES);
+    //Serial.print("Send Status: ");
+    if (result == ESP_OK) {
+      data_status = STATUS_SEND_SUCCESS;
+      Serial.println("Success");
     } else {
-      Serial.println("Not sure what happened");
+      data_status = STATUS_SEND_FAILED;
+      if (result == ESP_ERR_ESPNOW_NOT_INIT) {
+        // How did we get so far!!
+        Serial.println("ESPNOW not Init.");
+      } else if (result == ESP_ERR_ESPNOW_ARG) {
+        Serial.println("Invalid Argument");
+      } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
+        Serial.println("Internal Error");
+      } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
+        Serial.println("ESP_ERR_ESPNOW_NO_MEM");
+      } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
+        Serial.println("Peer not found.");
+      } else {
+        Serial.println("Not sure what happened");
+      }
     }
   }
 
@@ -164,54 +165,35 @@ void loop() {
     digitalWrite(LED_PIN_G, LOW);
     digitalWrite(LED_PIN_B, LOW);
   } else{
-    if (data != 0){ // turning
-      if (data != last_hall_data){
-        ++led_status;
-        led_status %= 3;
-      }
+    if (hall_data_bit != 0){ // turning
       bool led_red = false;
       bool led_green = false;
       bool led_blue = false;
-      if (1 & (data >> (5 - FACE_IDX_WHITE))){
+      if (1 & (hall_data_bit >> (5 - FACE_IDX_WHITE))){
         led_red = true;
         led_green = true;
         led_blue = true;
       }
-      if (1 & (data >> (5 - FACE_IDX_YELLOW))){
+      if (1 & (hall_data_bit >> (5 - FACE_IDX_YELLOW))){
         led_red = true;
         led_green = true;
       }
-      if (1 & (data >> (5 - FACE_IDX_GREEN))){
+      if (1 & (hall_data_bit >> (5 - FACE_IDX_GREEN))){
         led_green = true;
       }
-      if (1 & (data >> (5 - FACE_IDX_BLUE))){
+      if (1 & (hall_data_bit >> (5 - FACE_IDX_BLUE))){
         led_blue = true;
       }
-      if (1 & (data >> (5 - FACE_IDX_RED))){
+      if (1 & (hall_data_bit >> (5 - FACE_IDX_RED))){
         led_red = true;
       }
-      if (1 & (data >> (5 - FACE_IDX_ORAGNE))){
+      if (1 & (hall_data_bit >> (5 - FACE_IDX_ORAGNE))){
         led_red = true;
         led_blue = true;
       }
       digitalWrite(LED_PIN_R, led_red);
       digitalWrite(LED_PIN_G, led_green);
       digitalWrite(LED_PIN_B, led_blue);
-      /*
-      if (led_status == 0){
-        digitalWrite(LED_PIN_R, HIGH);
-        digitalWrite(LED_PIN_G, LOW);
-        digitalWrite(LED_PIN_B, LOW);
-      } else if (led_status == 1){
-        digitalWrite(LED_PIN_R, LOW);
-        digitalWrite(LED_PIN_G, HIGH);
-        digitalWrite(LED_PIN_B, LOW);
-      } else{
-        digitalWrite(LED_PIN_R, LOW);
-        digitalWrite(LED_PIN_G, LOW);
-        digitalWrite(LED_PIN_B, HIGH);
-      }
-      */
     } else{ // not turning
       digitalWrite(LED_PIN_R, LOW);
       digitalWrite(LED_PIN_G, LOW);
