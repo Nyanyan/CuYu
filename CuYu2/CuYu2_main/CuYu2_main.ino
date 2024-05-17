@@ -56,6 +56,13 @@ const int hall_pin[N_FACES] = {D4, D2, D3, D1, D0, D5};
 #define FACE_IDX_RED 4
 #define FACE_IDX_ORAGNE 5
 
+#define STATUS_SEND_SUCCESS 0
+#define STATUS_SEND_FAILED 1
+
+uint8_t last_hall_data_bit = 0b11111111;
+uint8_t hall_data_bit = 0;
+int data_status = STATUS_SEND_FAILED;
+
 // Init ESP Now with fallback
 void InitESPNow() {
   WiFi.disconnect();
@@ -69,6 +76,18 @@ void InitESPNow() {
     // or Simply Restart
     ESP.restart();
   }
+}
+
+void deep_sleep() {
+  Serial.println("sleep...");
+  //esp_bluedroid_disable();
+  //esp_bt_controller_disable();
+  esp_wifi_stop();
+  esp_deep_sleep_enable_gpio_wakeup(
+    BIT(GPIO_NUM_2) | BIT(GPIO_NUM_3) | BIT(GPIO_NUM_4) | 
+    BIT(GPIO_NUM_5) | BIT(GPIO_NUM_6) | BIT(GPIO_NUM_7), 
+    ESP_GPIO_WAKEUP_GPIO_LOW);
+  esp_deep_sleep_start();
 }
 
 void setup() {
@@ -108,13 +127,6 @@ void setup() {
     }
   }
 }
-
-#define STATUS_SEND_SUCCESS 0
-#define STATUS_SEND_FAILED 1
-
-uint8_t last_hall_data_bit = 0b11111111;
-uint8_t hall_data_bit = 0;
-int data_status = STATUS_SEND_FAILED;
 
 void loop() {
   // update data
@@ -156,6 +168,8 @@ void loop() {
         Serial.println("Not sure what happened");
       }
     }
+  } else{ // sleep
+    //deep_sleep(); // under construction
   }
 
   if (data_status == STATUS_SEND_FAILED){
