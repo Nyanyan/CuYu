@@ -59,7 +59,7 @@ const int hall_pin[N_FACES] = {D4, D2, D3, D1, D0, D5};
 #define STATUS_SEND_SUCCESS 0
 #define STATUS_SEND_FAILED 1
 
-#define DEEP_SLEEP_TIME_THRESHOLD 10000 // ms
+#define DEEP_SLEEP_TIME_THRESHOLD 30000 // ms
 
 uint8_t last_hall_data_bit = 0b11111111;
 uint8_t hall_data_bit = 0;
