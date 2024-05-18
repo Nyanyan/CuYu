@@ -43,12 +43,9 @@ esp_now_peer_info_t slave;
 #define DELETEBEFOREPAIR 0
 
 #define N_FACES 6
-#define LED_PIN_R D7
-#define LED_PIN_G D8
-#define LED_PIN_B D10
 // WYGBRO
 uint8_t hall_data[N_FACES] = {0, 0, 0, 0, 0, 0};
-const int hall_pin[N_FACES] = {D4, D2, D3, D1, D0, D5};
+const int hall_pin[N_FACES] = {D4, D2, D3, D1, D7, D5};
 #define FACE_IDX_WHITE 0
 #define FACE_IDX_YELLOW 1
 #define FACE_IDX_GREEN 2
@@ -84,9 +81,6 @@ void InitESPNow() {
 void deep_sleep() {
   Serial.println("sleep...");
   esp_wifi_stop();
-  digitalWrite(LED_PIN_R, LOW);
-  digitalWrite(LED_PIN_G, LOW);
-  digitalWrite(LED_PIN_B, LOW);
   esp_deep_sleep_enable_gpio_wakeup(
     BIT(GPIO_NUM_2) | BIT(GPIO_NUM_3) | BIT(GPIO_NUM_4) | BIT(GPIO_NUM_5), 
     ESP_GPIO_WAKEUP_GPIO_LOW);
@@ -98,10 +92,8 @@ void setup() {
   for (int i = 0; i < N_FACES; ++i){
     pinMode(hall_pin[i], INPUT_PULLUP);
   }
-  pinMode(LED_PIN_R, OUTPUT);
-  pinMode(LED_PIN_G, OUTPUT);
-  pinMode(LED_PIN_B, OUTPUT);
-
+  pinMode(D0, INPUT_PULLUP); // for sleep
+  pinMode(D8, INPUT_PULLUP); // for boot
   Serial.begin(115200);
 
   //Set device in STA mode to begin with
@@ -179,47 +171,6 @@ void loop() {
     }
   } else if (hall_data_bit == 0 && millis() - last_turned > DEEP_SLEEP_TIME_THRESHOLD){ // sleep
     deep_sleep();
-  }
-
-  if (data_status == STATUS_SEND_FAILED){
-    digitalWrite(LED_PIN_R, HIGH);
-    digitalWrite(LED_PIN_G, LOW);
-    digitalWrite(LED_PIN_B, LOW);
-  } else{
-    if (hall_data_bit != 0){ // turning
-      bool led_red = false;
-      bool led_green = false;
-      bool led_blue = false;
-      if (1 & (hall_data_bit >> FACE_IDX_WHITE)){
-        led_red = true;
-        led_green = true;
-        led_blue = true;
-      }
-      if (1 & (hall_data_bit >> FACE_IDX_YELLOW)){
-        led_red = true;
-        led_green = true;
-      }
-      if (1 & (hall_data_bit >> FACE_IDX_GREEN)){
-        led_green = true;
-      }
-      if (1 & (hall_data_bit >> FACE_IDX_BLUE)){
-        led_blue = true;
-      }
-      if (1 & (hall_data_bit >> FACE_IDX_RED)){
-        led_red = true;
-      }
-      if (1 & (hall_data_bit >> FACE_IDX_ORAGNE)){
-        led_red = true;
-        led_blue = true;
-      }
-      digitalWrite(LED_PIN_R, led_red);
-      digitalWrite(LED_PIN_G, led_green);
-      digitalWrite(LED_PIN_B, led_blue);
-    } else{ // not turning
-      digitalWrite(LED_PIN_R, LOW);
-      digitalWrite(LED_PIN_G, LOW);
-      digitalWrite(LED_PIN_B, LOW);
-    }
   }
 
   // wait for 3seconds to run the logic again
