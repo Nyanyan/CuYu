@@ -64,7 +64,15 @@ Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> bOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> rOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> oOscil(SAW2048_DATA);
 Oscil<2048, 32768> *Oscils[N_FACES];
-//ADSR <AUDIO_RATE, AUDIO_RATE> envelope;
+
+ADSR <AUDIO_RATE, AUDIO_RATE> wenvelope;
+ADSR <AUDIO_RATE, AUDIO_RATE> yenvelope;
+ADSR <AUDIO_RATE, AUDIO_RATE> genvelope;
+ADSR <AUDIO_RATE, AUDIO_RATE> benvelope;
+ADSR <AUDIO_RATE, AUDIO_RATE> renvelope;
+ADSR <AUDIO_RATE, AUDIO_RATE> oenvelope;
+ADSR<32768, 32768> *envelopes[N_FACES];
+
 ReverbTank reverb;
 
 int f_values[N_FACES];
@@ -110,9 +118,17 @@ void setup() {
   Oscils[3] = &bOscil;
   Oscils[4] = &rOscil;
   Oscils[5] = &oOscil;
+  envelopes[0] = &wenvelope;
+  envelopes[1] = &yenvelope;
+  envelopes[2] = &genvelope;
+  envelopes[3] = &benvelope;
+  envelopes[4] = &renvelope;
+  envelopes[5] = &oenvelope;
   startMozzi(CONTROL_RATE);
   for (int i = 0; i < N_FACES; ++i){
     Oscils[i]->setFreq(tones[i]);
+    envelopes[i]->setADLevels(255, 128);
+    envelopes[i]->setTimes(10, 10, 500, 500);
   }
   //envelope.setADLevels(255, 128);
   //envelope.setTimes(10, 10, 100, 500);
@@ -136,10 +152,11 @@ void setup() {
 // callback when data is recv from Master
 void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   for (int i = 0; i < N_FACES; ++i){
-    f_values[i] = values[i];
-  }
-  for (int i = 0; i < N_FACES; ++i){
     values[i] = (1 & (data[0] >> i));
+    if (values[i] == 1 && f_values[i] == 0){
+      envelopes[i]->noteOn();
+    }
+    f_values[i] = values[i];
   }
   /*
   for (int i = 0; i < N_FACES; ++i){
@@ -157,12 +174,13 @@ void updateControl() {
 AudioOutput updateAudio(){
   int synth = 0;
   for (int i = 0; i < N_FACES; ++i){
-    synth += Oscils[i]->next() * values[i];
+    envelopes[i]->update();
+    synth += (values[i] * Oscils[i]->next() * envelopes[i]->next()) >> 8;
   }
-  synth /= 6;
+  synth >> 3;
   //return MonoOutput::fromAlmostNBit(9, synth);
   int arev = reverb.next(synth);
-  return MonoOutput::fromAlmostNBit(9, synth + (arev>>3));
+  return MonoOutput::fromAlmostNBit(9, synth + (arev >> 3));
 }
 
 void loop() {
