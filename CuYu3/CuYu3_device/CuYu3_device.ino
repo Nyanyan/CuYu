@@ -34,10 +34,22 @@
 
 #include <esp_now.h>
 #include <WiFi.h>
+#include <MozziGuts.h>
+#include <Oscil.h>
+#include <tables/sin2048_int8.h>
 
 #define CHANNEL 1
 
 #define N_FACES 6
+
+#define CONTROL_RATE 64
+
+Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> wOscil(SIN2048_DATA);
+Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> yOscil(SIN2048_DATA);
+Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> gOscil(SIN2048_DATA);
+Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> bOscil(SIN2048_DATA);
+Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> rOscil(SIN2048_DATA);
+Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> oOscil(SIN2048_DATA);
 
 // Init ESP Now with fallback
 void InitESPNow() {
@@ -71,6 +83,9 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println("ESPNow/Basic/Slave Example");
+
+  startMozzi(CONTROL_RATE);
+
   //Set device in AP mode to begin with
   WiFi.mode(WIFI_AP);
   // configure device AP mode
@@ -86,18 +101,37 @@ void setup() {
 
 // callback when data is recv from Master
 void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
-  //char macStr[18];
-  //snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
-  //         mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
-  //Serial.print("Last Packet Recv from: "); Serial.println(macStr);
-  //Serial.print("Last Packet Recv Data: ");
-  /*
-  for (int i = 0; i < N_FACES; ++i){
-    Serial.print((char)data[i]);
-    Serial.print(' ');
+  if (1 & (data[0] >> 0)){
+    wOscil.setFreq(330);
+  } else{
+    wOscil.setFreq(0);
   }
-  Serial.println("");
-  */
+  if (1 & (data[0] >> 1)){
+    yOscil.setFreq(262);
+  } else{
+    yOscil.setFreq(0);
+  }
+  if (1 & (data[0] >> 2)){
+    gOscil.setFreq(392);
+  } else{
+    gOscil.setFreq(0);
+  }
+  if (1 & (data[0] >> 3)){
+    bOscil.setFreq(523);
+  } else{
+    bOscil.setFreq(0);
+  }
+  if (1 & (data[0] >> 4)){
+    rOscil.setFreq(294);
+  } else{
+    rOscil.setFreq(0);
+  }
+  if (1 & (data[0] >> 5)){
+    oOscil.setFreq(440);
+  } else{
+    oOscil.setFreq(0);
+  }
+
   for (int i = 0; i < N_FACES; ++i){
     uint8_t bit = 1 & (data[0] >> i);
     Serial.print(bit);
@@ -106,6 +140,13 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   Serial.println("");
 }
 
+void updateControl() {
+}
+
+int updateAudio() {
+  return (wOscil.next() + yOscil.next() + gOscil.next() + bOscil.next() + rOscil.next() + oOscil.next()) / 6;
+}
+
 void loop() {
-  // Chill
+  audioHook();
 }
