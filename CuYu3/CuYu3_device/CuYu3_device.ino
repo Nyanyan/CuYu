@@ -141,13 +141,14 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   for (int i = 0; i < N_FACES; ++i){
     values[i] = (1 & (data[0] >> i));
   }
-
+  /*
   for (int i = 0; i < N_FACES; ++i){
     uint8_t bit = 1 & (data[0] >> i);
     Serial.print(bit);
     Serial.print(' ');
   }
   Serial.println("");
+  */
 }
 
 void updateControl() {
