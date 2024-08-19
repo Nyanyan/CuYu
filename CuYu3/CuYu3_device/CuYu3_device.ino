@@ -36,10 +36,11 @@
 #include <WiFi.h>
 
 #include <Mozzi.h>
+//#include <MozziGuts.h>
 #include <ReverbTank.h>
 #include <Oscil.h>
-//#include <tables/sin2048_int8.h>
 #include <tables/saw2048_int8.h>
+#include <ADSR.h>
 
 #define CHANNEL 1
 
@@ -54,21 +55,14 @@
 #define R_TONE 293.665f
 #define O_TONE 440.000f
 
-/*
-Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> wOscil(SIN2048_DATA);
-Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> yOscil(SIN2048_DATA);
-Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> gOscil(SIN2048_DATA);
-Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> bOscil(SIN2048_DATA);
-Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> rOscil(SIN2048_DATA);
-Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> oOscil(SIN2048_DATA);
-*/
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> wOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> yOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> gOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> bOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> rOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> oOscil(SAW2048_DATA);
-ReverbTank reverb;
+//ADSR <AUDIO_RATE, AUDIO_RATE> envelope;
+//ReverbTank reverb;
 
 
 // Init ESP Now with fallback
@@ -100,6 +94,8 @@ void configDeviceAP() {
 
 void setup() {
   startMozzi(CONTROL_RATE);
+  //envelope.setADLevels(255, 128);
+  //envelope.setTimes(10, 10, 100, 500);
 
   Serial.begin(115200);
   Serial.println("ESPNow/Basic/Slave Example");
@@ -166,7 +162,6 @@ AudioOutput updateAudio(){
   return MonoOutput::fromAlmostNBit(9, synth);
   //return MonoOutput::from8Bit(synth);
   //int arev = reverb.next(synth);
-  // add the dry and wet signals
   //return MonoOutput::fromAlmostNBit(9, synth + (arev>>3));
 }
 
