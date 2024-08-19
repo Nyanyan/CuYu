@@ -65,7 +65,7 @@ Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> rOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> oOscil(SAW2048_DATA);
 Oscil<2048, 32768> *Oscils[N_FACES];
 //ADSR <AUDIO_RATE, AUDIO_RATE> envelope;
-//ReverbTank reverb;
+ReverbTank reverb;
 
 int f_values[N_FACES];
 int values[N_FACES];
@@ -160,10 +160,9 @@ AudioOutput updateAudio(){
     synth += Oscils[i]->next() * values[i];
   }
   synth /= 6;
-  return MonoOutput::fromAlmostNBit(9, synth);
-  //return MonoOutput::from8Bit(synth);
-  //int arev = reverb.next(synth);
-  //return MonoOutput::fromAlmostNBit(9, synth + (arev>>3));
+  //return MonoOutput::fromAlmostNBit(9, synth);
+  int arev = reverb.next(synth);
+  return MonoOutput::fromAlmostNBit(9, synth + (arev>>3));
 }
 
 void loop() {
