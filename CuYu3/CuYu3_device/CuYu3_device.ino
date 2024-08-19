@@ -35,11 +35,6 @@
 #include <esp_now.h>
 #include <WiFi.h>
 
-/*
-#include <MozziGuts.h>
-#include <Oscil.h>
-#include <tables/sin2048_int8.h>
-*/
 #include <Mozzi.h>
 #include <ReverbTank.h>
 #include <Oscil.h>
@@ -50,21 +45,29 @@
 
 #define N_FACES 6
 
-#define CONTROL_RATE 512
+#define CONTROL_RATE 128
 
-#define W_TONE 330 //329.628
-#define Y_TONE 262 // 261.626
-#define G_TONE 392 // 391.995
-#define B_TONE 523 // 523.251
-#define R_TONE 294 // 293.665
-#define O_TONE 440 // 440.000
+#define W_TONE 329.628f
+#define Y_TONE 261.626f
+#define G_TONE 391.995f
+#define B_TONE 523.251f
+#define R_TONE 293.665f
+#define O_TONE 440.000f
 
+/*
 Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> wOscil(SIN2048_DATA);
 Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> yOscil(SIN2048_DATA);
 Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> gOscil(SIN2048_DATA);
 Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> bOscil(SIN2048_DATA);
 Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> rOscil(SIN2048_DATA);
 Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> oOscil(SIN2048_DATA);
+*/
+Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> wOscil(SAW2048_DATA);
+Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> yOscil(SAW2048_DATA);
+Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> gOscil(SAW2048_DATA);
+Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> bOscil(SAW2048_DATA);
+Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> rOscil(SAW2048_DATA);
+Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> oOscil(SAW2048_DATA);
 ReverbTank reverb;
 
 
@@ -160,9 +163,11 @@ void updateControl() {
 
 AudioOutput updateAudio(){
   int synth = (wOscil.next() + yOscil.next() + gOscil.next() + bOscil.next() + rOscil.next() + oOscil.next()) / 6;
-  int arev = reverb.next(synth);
+  return MonoOutput::fromAlmostNBit(9, synth);
+  //return MonoOutput::from8Bit(synth);
+  //int arev = reverb.next(synth);
   // add the dry and wet signals
-  return MonoOutput::fromAlmostNBit(9, synth + (arev>>3));
+  //return MonoOutput::fromAlmostNBit(9, synth + (arev>>3));
 }
 
 void loop() {
