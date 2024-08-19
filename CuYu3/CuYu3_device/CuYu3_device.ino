@@ -34,15 +34,23 @@
 
 #include <esp_now.h>
 #include <WiFi.h>
+
+/*
 #include <MozziGuts.h>
 #include <Oscil.h>
 #include <tables/sin2048_int8.h>
+*/
+#include <Mozzi.h>
+#include <ReverbTank.h>
+#include <Oscil.h>
+//#include <tables/sin2048_int8.h>
+#include <tables/saw2048_int8.h>
 
 #define CHANNEL 1
 
 #define N_FACES 6
 
-#define CONTROL_RATE 64
+#define CONTROL_RATE 512
 
 #define W_TONE 330 //329.628
 #define Y_TONE 262 // 261.626
@@ -57,6 +65,8 @@ Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> gOscil(SIN2048_DATA);
 Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> bOscil(SIN2048_DATA);
 Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> rOscil(SIN2048_DATA);
 Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> oOscil(SIN2048_DATA);
+ReverbTank reverb;
+
 
 // Init ESP Now with fallback
 void InitESPNow() {
@@ -86,12 +96,10 @@ void configDeviceAP() {
 }
 
 void setup() {
-  pinMode(A0, INPUT);
+  startMozzi(CONTROL_RATE);
 
   Serial.begin(115200);
   Serial.println("ESPNow/Basic/Slave Example");
-
-  startMozzi(CONTROL_RATE);
 
   //Set device in AP mode to begin with
   WiFi.mode(WIFI_AP);
@@ -150,8 +158,11 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
 void updateControl() {
 }
 
-int updateAudio() {
-  return (wOscil.next() + yOscil.next() + gOscil.next() + bOscil.next() + rOscil.next() + oOscil.next()) / 6;
+AudioOutput updateAudio(){
+  int synth = (wOscil.next() + yOscil.next() + gOscil.next() + bOscil.next() + rOscil.next() + oOscil.next()) / 6;
+  int arev = reverb.next(synth);
+  // add the dry and wet signals
+  return MonoOutput::fromAlmostNBit(9, synth + (arev>>3));
 }
 
 void loop() {
