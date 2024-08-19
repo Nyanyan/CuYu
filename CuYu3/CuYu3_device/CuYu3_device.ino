@@ -44,6 +44,13 @@
 
 #define CONTROL_RATE 64
 
+#define W_TONE 330 //329.628
+#define Y_TONE 262 // 261.626
+#define G_TONE 392 // 391.995
+#define B_TONE 523 // 523.251
+#define R_TONE 294 // 293.665
+#define O_TONE 440 // 440.000
+
 Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> wOscil(SIN2048_DATA);
 Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> yOscil(SIN2048_DATA);
 Oscil<SIN2048_NUM_CELLS, AUDIO_RATE> gOscil(SIN2048_DATA);
@@ -102,32 +109,32 @@ void setup() {
 // callback when data is recv from Master
 void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   if (1 & (data[0] >> 0)){
-    wOscil.setFreq(330);
+    wOscil.setFreq(W_TONE);
   } else{
     wOscil.setFreq(0);
   }
   if (1 & (data[0] >> 1)){
-    yOscil.setFreq(262);
+    yOscil.setFreq(Y_TONE);
   } else{
     yOscil.setFreq(0);
   }
   if (1 & (data[0] >> 2)){
-    gOscil.setFreq(392);
+    gOscil.setFreq(G_TONE);
   } else{
     gOscil.setFreq(0);
   }
   if (1 & (data[0] >> 3)){
-    bOscil.setFreq(523);
+    bOscil.setFreq(B_TONE);
   } else{
     bOscil.setFreq(0);
   }
   if (1 & (data[0] >> 4)){
-    rOscil.setFreq(294);
+    rOscil.setFreq(R_TONE);
   } else{
     rOscil.setFreq(0);
   }
   if (1 & (data[0] >> 5)){
-    oOscil.setFreq(440);
+    oOscil.setFreq(O_TONE);
   } else{
     oOscil.setFreq(0);
   }
