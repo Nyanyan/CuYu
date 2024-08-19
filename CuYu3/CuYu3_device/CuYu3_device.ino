@@ -48,12 +48,14 @@
 
 #define CONTROL_RATE 128
 
-#define W_TONE 329.628f
-#define Y_TONE 261.626f
-#define G_TONE 391.995f
-#define B_TONE 523.251f
-#define R_TONE 293.665f
-#define O_TONE 440.000f
+const float tones[N_FACES] = {
+  329.628f, // W
+  261.626f, // Y
+  391.995f, // G
+  523.251f, // B
+  293.665f, // R
+  440.000f  // O
+};
 
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> wOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> yOscil(SAW2048_DATA);
@@ -61,8 +63,12 @@ Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> gOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> bOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> rOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> oOscil(SAW2048_DATA);
+Oscil<2048, 32768> *Oscils[N_FACES];
 //ADSR <AUDIO_RATE, AUDIO_RATE> envelope;
 //ReverbTank reverb;
+
+int f_values[N_FACES];
+int values[N_FACES];
 
 
 // Init ESP Now with fallback
@@ -93,7 +99,21 @@ void configDeviceAP() {
 }
 
 void setup() {
+  for (int i = 0; i < N_FACES; ++i){
+    f_values[i] = 0;
+    values[i] = 0;
+  }
+
+  Oscils[0] = &wOscil;
+  Oscils[1] = &yOscil;
+  Oscils[2] = &gOscil;
+  Oscils[3] = &bOscil;
+  Oscils[4] = &rOscil;
+  Oscils[5] = &oOscil;
   startMozzi(CONTROL_RATE);
+  for (int i = 0; i < N_FACES; ++i){
+    Oscils[i]->setFreq(tones[i]);
+  }
   //envelope.setADLevels(255, 128);
   //envelope.setTimes(10, 10, 100, 500);
 
@@ -115,35 +135,11 @@ void setup() {
 
 // callback when data is recv from Master
 void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
-  if (1 & (data[0] >> 0)){
-    wOscil.setFreq(W_TONE);
-  } else{
-    wOscil.setFreq(0);
+  for (int i = 0; i < N_FACES; ++i){
+    f_values[i] = values[i];
   }
-  if (1 & (data[0] >> 1)){
-    yOscil.setFreq(Y_TONE);
-  } else{
-    yOscil.setFreq(0);
-  }
-  if (1 & (data[0] >> 2)){
-    gOscil.setFreq(G_TONE);
-  } else{
-    gOscil.setFreq(0);
-  }
-  if (1 & (data[0] >> 3)){
-    bOscil.setFreq(B_TONE);
-  } else{
-    bOscil.setFreq(0);
-  }
-  if (1 & (data[0] >> 4)){
-    rOscil.setFreq(R_TONE);
-  } else{
-    rOscil.setFreq(0);
-  }
-  if (1 & (data[0] >> 5)){
-    oOscil.setFreq(O_TONE);
-  } else{
-    oOscil.setFreq(0);
+  for (int i = 0; i < N_FACES; ++i){
+    values[i] = (1 & (data[0] >> i));
   }
 
   for (int i = 0; i < N_FACES; ++i){
@@ -158,7 +154,11 @@ void updateControl() {
 }
 
 AudioOutput updateAudio(){
-  int synth = (wOscil.next() + yOscil.next() + gOscil.next() + bOscil.next() + rOscil.next() + oOscil.next()) / 6;
+  int synth = 0;
+  for (int i = 0; i < N_FACES; ++i){
+    synth += Oscils[i]->next() * values[i];
+  }
+  synth /= 6;
   return MonoOutput::fromAlmostNBit(9, synth);
   //return MonoOutput::from8Bit(synth);
   //int arev = reverb.next(synth);
