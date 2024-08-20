@@ -45,7 +45,8 @@ esp_now_peer_info_t slave;
 #define N_FACES 6
 // WYGBRO
 uint8_t hall_data[N_FACES] = {0, 0, 0, 0, 0, 0};
-const int hall_pin[N_FACES] = {D4, D2, D3, D1, D7, D5};
+// const int hall_pin[N_FACES] = {D4, D2, D3, D1, D7, D5}; // CuYu2
+const int hall_pin[N_FACES] = {D3, D2, D4, D7, D1, D5}; // CuYu3
 #define FACE_IDX_WHITE 0
 #define FACE_IDX_YELLOW 1
 #define FACE_IDX_GREEN 2
