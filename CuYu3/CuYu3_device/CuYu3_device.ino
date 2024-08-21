@@ -49,12 +49,20 @@
 #define CONTROL_RATE 128
 
 const float tones[N_FACES] = {
+  /*
   329.628f, // W E4
   261.626f, // Y C4
   391.995f, // G G4
   523.251f, // B C5
   293.665f, // R D4
   440.000f  // O A4
+  */
+  391.995f, // W G4 4
+  261.626f, // Y C4 1
+  329.628f, // G E4 3
+  523.251f, // B C5 6
+  293.665f, // R D4 2
+  440.000f  // O A4 5
 };
 
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> wOscil(SAW2048_DATA);
