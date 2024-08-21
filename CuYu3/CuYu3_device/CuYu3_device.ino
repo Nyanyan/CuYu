@@ -136,10 +136,8 @@ void setup() {
   for (int i = 0; i < N_FACES; ++i){
     Oscils[i]->setFreq(tones[i]);
     envelopes[i]->setADLevels(255, 128);
-    envelopes[i]->setTimes(10, 10, 500, 500);
+    envelopes[i]->setTimes(10, 10, 1000000, 200);
   }
-  //envelope.setADLevels(255, 128);
-  //envelope.setTimes(10, 10, 100, 500);
 
   Serial.begin(115200);
   Serial.println("ESPNow/Basic/Slave Example");
@@ -163,6 +161,8 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
     values[i] = (1 & (data[0] >> i));
     if (values[i] == 1 && f_values[i] == 0){
       envelopes[i]->noteOn();
+    } else if (values[i] == 0 && f_values[i] == 1){
+      envelopes[i]->noteOff();
     }
     f_values[i] = values[i];
   }
@@ -183,7 +183,12 @@ AudioOutput updateAudio(){
   int synth = 0;
   for (int i = 0; i < N_FACES; ++i){
     envelopes[i]->update();
-    synth += (values[i] * Oscils[i]->next() * envelopes[i]->next()) >> 8;
+    //synth += (values[i] * Oscils[i]->next() * envelopes[i]->next()) >> 8;
+    int gain = envelopes[i]->next();
+    if (values[i] == 1){
+      gain = max(gain, 128);
+    }
+    synth += (gain * Oscils[i]->next()) >> 8;
   }
   synth >> 3;
   //return MonoOutput::fromAlmostNBit(9, synth);
