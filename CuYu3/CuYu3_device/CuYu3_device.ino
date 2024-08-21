@@ -37,10 +37,11 @@
 
 #include <Mozzi.h>
 //#include <MozziGuts.h>
-#include <ReverbTank.h>
+//#include <ReverbTank.h>
 #include <Oscil.h>
 #include <tables/saw2048_int8.h>
 #include <ADSR.h>
+#include <ResonantFilter.h>
 
 #define CHANNEL 1
 
@@ -112,6 +113,8 @@ ADSR<32768, 32768> *envelopes[N_FACES];
 
 //ReverbTank reverb;
 
+LowPassFilter lpf;
+
 int f_values[N_FACES];
 int values[N_FACES];
 
@@ -149,6 +152,7 @@ void setup() {
     values[i] = 0;
   }
 
+  startMozzi(CONTROL_RATE);
   Oscils[0] = &wOscil;
   Oscils[1] = &yOscil;
   Oscils[2] = &gOscil;
@@ -161,12 +165,12 @@ void setup() {
   envelopes[3] = &benvelope;
   envelopes[4] = &renvelope;
   envelopes[5] = &oenvelope;
-  startMozzi(CONTROL_RATE);
   for (int i = 0; i < N_FACES; ++i){
     Oscils[i]->setFreq(tones[i]);
     envelopes[i]->setADLevels(255, 128);
     envelopes[i]->setTimes(10, 10, 1000000, 200);
   }
+  lpf.setCutoffFreqAndResonance(150, 100);
 
   Serial.begin(115200);
   Serial.println("ESPNow/Basic/Slave Example");
@@ -220,6 +224,7 @@ AudioOutput updateAudio(){
     synth += (gain * Oscils[i]->next()) >> 8;
   }
   synth >> 3;
+  synth = lpf.next(synth)>>1;
   return MonoOutput::fromAlmostNBit(9, synth);
   //int arev = reverb.next(synth);
   //return MonoOutput::fromAlmostNBit(9, synth + (arev >> 3));
