@@ -46,54 +46,58 @@
 #define CHANNEL 1
 
 #define N_FACES 6
-
+#define N_TONES 5
 #define CONTROL_RATE 128
 
-const float tones[N_FACES] = {
-  /*
-  // 呂旋法
-  391.995f, // W G4 4
-  261.626f, // Y C4 1
-  329.628f, // G E4 3
-  523.251f, // B C5 6
-  293.665f, // R D4 2
-  440.000f  // O A4 5
-  */
-  /*
-  // 律旋法
-  391.995f, // W G4 4
-  261.626f, // Y C4 1
-  349.228f, // G F4 3
-  523.251f, // B C5 6
-  293.665f, // R D4 2
-  440.000f  // O A4 5
-  */
-  /*
-  // 民謡音階
-  391.995f, // W G4 4
-  261.626f, // Y C4 1
-  349.228f, // G F4 3
-  523.251f, // B C5 6
-  311.127f, // R Eb4 2
-  466.164f  // O Bb4 5
-  */
-  /*
-  // 都節音階
-  391.995f, // W G4 4
-  261.626f, // Y C4 1
-  349.228f, // G F4 3
-  523.251f, // B C5 6
-  277.183f, // R Db4 2
-  415.305f  // O Ab4 5
-  */
-  // 琉球音階
-  391.995f, // W G4 4
-  261.626f, // Y C4 1
-  349.228f, // G F4 3
-  523.251f, // B C5 6
-  329.628f, // R E4 2
-  493.883f  // O B4 5
+const float tones[N_TONES][N_FACES] = {
+  {
+    // 呂旋法
+    391.995f, // W G4 4
+    261.626f, // Y C4 1
+    329.628f, // G E4 3
+    523.251f, // B C5 6
+    293.665f, // R D4 2
+    440.000f  // O A4 5
+  },
+  {
+    // 律旋法
+    391.995f, // W G4 4
+    261.626f, // Y C4 1
+    349.228f, // G F4 3
+    523.251f, // B C5 6
+    293.665f, // R D4 2
+    440.000f  // O A4 5
+  },
+  {
+    // 民謡音階
+    391.995f, // W G4 4
+    261.626f, // Y C4 1
+    349.228f, // G F4 3
+    523.251f, // B C5 6
+    311.127f, // R Eb4 2
+    466.164f  // O Bb4 5
+  },
+  {
+    // 都節音階
+    391.995f, // W G4 4
+    261.626f, // Y C4 1
+    349.228f, // G F4 3
+    523.251f, // B C5 6
+    277.183f, // R Db4 2
+    415.305f  // O Ab4 5
+  },
+  {
+    // 琉球音階
+    391.995f, // W G4 4
+    261.626f, // Y C4 1
+    349.228f, // G F4 3
+    523.251f, // B C5 6
+    329.628f, // R E4 2
+    493.883f  // O B4 5
+  }
 };
+
+const int tone_buttons[N_TONES] = {23, 22, 21, 19, 18};
 
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> wOscil(SAW2048_DATA);
 Oscil<SAW2048_NUM_CELLS, AUDIO_RATE> yOscil(SAW2048_DATA);
@@ -146,10 +150,20 @@ void configDeviceAP() {
   }
 }
 
+void set_freq(int tone_idx){
+  for (int i = 0; i < N_FACES; ++i){
+    Oscils[i]->setFreq(tones[tone_idx][i]);
+  }
+}
+
 void setup() {
   for (int i = 0; i < N_FACES; ++i){
     f_values[i] = 0;
     values[i] = 0;
+  }
+
+  for (int i = 0; i < N_TONES; ++i){
+    pinMode(tone_buttons[i], INPUT_PULLUP);
   }
 
   startMozzi(CONTROL_RATE);
@@ -166,11 +180,11 @@ void setup() {
   envelopes[4] = &renvelope;
   envelopes[5] = &oenvelope;
   for (int i = 0; i < N_FACES; ++i){
-    Oscils[i]->setFreq(tones[i]);
     envelopes[i]->setADLevels(255, 128);
     envelopes[i]->setTimes(10, 10, 1000000, 200);
   }
   lpf.setCutoffFreqAndResonance(150, 100);
+  set_freq(0);
 
   Serial.begin(115200);
   Serial.println("ESPNow/Basic/Slave Example");
@@ -210,6 +224,11 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
 }
 
 void updateControl() {
+  for (int i = 0; i < N_TONES; ++i){
+    if (!digitalRead(tone_buttons[i])){
+      set_freq(i);
+    }
+  }
 }
 
 AudioOutput updateAudio(){
