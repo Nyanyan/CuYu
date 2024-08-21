@@ -226,6 +226,8 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
 void updateControl() {
   for (int i = 0; i < N_TONES; ++i){
     if (!digitalRead(tone_buttons[i])){
+      Serial.print("tone set ");
+      Serial.println(i);
       set_freq(i);
     }
   }
