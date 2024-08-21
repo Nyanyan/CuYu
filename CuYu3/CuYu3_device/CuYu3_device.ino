@@ -110,7 +110,7 @@ ADSR <AUDIO_RATE, AUDIO_RATE> renvelope;
 ADSR <AUDIO_RATE, AUDIO_RATE> oenvelope;
 ADSR<32768, 32768> *envelopes[N_FACES];
 
-ReverbTank reverb;
+//ReverbTank reverb;
 
 int f_values[N_FACES];
 int values[N_FACES];
@@ -220,9 +220,9 @@ AudioOutput updateAudio(){
     synth += (gain * Oscils[i]->next()) >> 8;
   }
   synth >> 3;
-  //return MonoOutput::fromAlmostNBit(9, synth);
-  int arev = reverb.next(synth);
-  return MonoOutput::fromAlmostNBit(9, synth + (arev >> 3));
+  return MonoOutput::fromAlmostNBit(9, synth);
+  //int arev = reverb.next(synth);
+  //return MonoOutput::fromAlmostNBit(9, synth + (arev >> 3));
 }
 
 void loop() {
