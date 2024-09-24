@@ -150,7 +150,14 @@ void loop() {
     }
     Serial.print(" ");
     Serial.println(hall_data_bit);
-    esp_err_t result = esp_now_send(slave.peer_addr, &hall_data_bit, sizeof(hall_data_bit));
+    uint8_t send_data[5];
+    send_data[0] = 'C';
+    send_data[1] = 'u';
+    send_data[2] = 'Y';
+    send_data[3] = 'u';
+    send_data[4] = hall_data_bit;
+    esp_err_t result = esp_now_send(slave.peer_addr, send_data, 5);
+    //esp_err_t result = esp_now_send(slave.peer_addr, &hall_data_bit, sizeof(hall_data_bit));
     if (result == ESP_OK) {
       data_status = STATUS_SEND_SUCCESS;
       Serial.println("Success");
