@@ -81,12 +81,21 @@ const float tones[N_TONES][N_FACES] = {
   },
   {
     // 律旋法
+    /*
     391.995f, // W G4 4
     261.626f, // Y C4 1
     349.228f, // G F4 3
     523.251f, // B C5 6
     293.665f, // R D4 2
     440.000f  // O A4 5
+    */
+    // key -5
+    293.665f, // W D4 4
+    195.998f, // Y G3 1
+    261.626f, // G C4 3
+    391.995f, // B G4 6
+    220.000f, // R A3 2
+    329.628f  // O E4 5
   },
   {
     // 民謡音階
@@ -99,21 +108,48 @@ const float tones[N_TONES][N_FACES] = {
   },
   {
     // 都節音階
+    /*
     391.995f, // W G4 4
     261.626f, // Y C4 1
     349.228f, // G F4 3
     523.251f, // B C5 6
     277.183f, // R Db4 2
     415.305f  // O Ab4 5
+    */
+    /*
+    // key -3
+    329.628f, // W E4 4
+    220.000f, // Y A3 1
+    293.665f, // G D4 3
+    440.000f, // B A4 6
+    233.082f, // R Bb3 2
+    349.228f  // O F4 5
+    */
+    // key -7
+    261.616f, // W C4 4
+    174.614f, // Y F3 1
+    233.082f, // G Bb3 3
+    349.228f, // B F4 6
+    184.997f, // R Gb3 2
+    277.183f  // O Db4 5
   },
   {
     // 琉球音階
+    /*
     391.995f, // W G4 4
     261.626f, // Y C4 1
     349.228f, // G F4 3
     523.251f, // B C5 6
     329.628f, // R E4 2
     493.883f  // O B4 5
+    */
+    // key +3
+    466.164f, // W Bb4 4
+    311.127f, // Y Eb4 1
+    415.305f, // G Ab4 3
+    622.254f, // B Eb5 6
+    391.995f, // R G4 2
+    587.330f  // O D5 5
   }
 };
 
@@ -272,7 +308,7 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
       digitalWrite(CHARGING_LED, charging_led_state);
       awake_state = false;
       digitalWrite(AWAKE_LED, awake_state);
-      Serial.print("Charging");
+      Serial.println("Charging");
     } else if (datum == DATA_DEEPSLEEP) { // sleep
       awake_state = false;
       digitalWrite(AWAKE_LED, awake_state);
