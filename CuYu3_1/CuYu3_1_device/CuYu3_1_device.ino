@@ -56,14 +56,18 @@
 #define AWAKE_LED 5
 bool awake_state = true;
 
-const int rgb_led[3] = {26, 27, 32}; // RGB
+const int rgb_led[3] = {27, 14, 32}; // RGB
 const int tone_led_colors[N_TONES][3] = { // RGB, false: off
-  { true,  true,  true}, // 呂旋法 (黒)
-  { true, false, false}, // 律旋法 (橙)
-  {false,  true, false}, // 民謡音階 (緑)
-  { true,  true, false}, // 都節音階 (黄)
-  {false, false,  true}, // 琉球音階 (青)
+  { true,  true,  true}, // 呂旋法 (黒->白)
+  { true, false, false}, // 律旋法 (橙->赤)
+  {false,  true, false}, // 民謡音階 (緑->緑)
+  { true,  true, false}, // 都節音階 (黄->黄)
+  {false, false,  true}, // 琉球音階 (青->青)
 };
+
+int led_blink_state = 1;
+
+int tone_idx = 0;
 
 const float tones[N_TONES][N_FACES] = {
   {
@@ -167,18 +171,28 @@ void configDeviceAP() {
   }
 }
 
-void set_freq(int tone_idx){
+void set_freq(int idx){
   for (int i = 0; i < N_FACES; ++i){
-    Oscils[i]->setFreq(tones[tone_idx][i]);
+    Oscils[i]->setFreq(tones[idx][i]);
   }
+}
+
+void set_rgb_led_tone(int idx) {
   for (int i = 0; i < 3; ++i) {
-    digitalWrite(rgb_led[i], !tone_led_colors[tone_idx][i]);
+    digitalWrite(rgb_led[i], !tone_led_colors[idx][i]);
   }
 }
 
 void rgb_led_off() {
   for (int i = 0; i < 3; ++i) {
     digitalWrite(rgb_led[i], HIGH);
+  }
+}
+
+void rgb_led_light_bit(int bits) {
+  for (int i = 0; i < 3; ++i) {
+    bool bit = (bits >> i) & 1;
+    digitalWrite(rgb_led[i], !bit);
   }
 }
 
@@ -218,7 +232,8 @@ void setup() {
     envelopes[i]->setTimes(10, 10, 1000000, 200);
   }
   lpf.setCutoffFreqAndResonance(150, 100);
-  set_freq(0);
+  set_freq(tone_idx);
+  set_rgb_led_tone(tone_idx);
 
   Serial.begin(115200);
   Serial.println("ESPNow/Basic/Slave Example");
@@ -248,14 +263,20 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
           f_values[i] = 0;
         }
       }
+      rgb_led_light_bit(led_blink_state);
+      ++led_blink_state;
+      if (led_blink_state >= 8) {
+        led_blink_state = 1;
+      }
       charging_led_state = !charging_led_state;
       digitalWrite(CHARGING_LED, charging_led_state);
       awake_state = false;
       digitalWrite(AWAKE_LED, awake_state);
-      Serial.println("Charging");
+      Serial.print("Charging");
     } else if (datum == DATA_DEEPSLEEP) { // sleep
       awake_state = false;
       digitalWrite(AWAKE_LED, awake_state);
+      rgb_led_off();
       Serial.println("Sleep");
     } else { // sound
       if (charging_led_state) {
@@ -265,6 +286,7 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
       if (!awake_state) {
         awake_state = true;
         digitalWrite(AWAKE_LED, awake_state);
+        set_rgb_led_tone(tone_idx);
       }
       for (int i = 0; i < N_FACES; ++i){
         values[i] = (1 & (datum >> i));
@@ -289,9 +311,11 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
 void updateControl() {
   for (int i = 0; i < N_TONES; ++i){
     if (!digitalRead(tone_buttons[i])){
+      tone_idx = i;
+      set_freq(i);
+      set_rgb_led_tone(i);
       Serial.print("tone set ");
       Serial.println(i);
-      set_freq(i);
     }
   }
 }
