@@ -217,6 +217,7 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
       for (int i = 0; i < N_FACES; ++i) {
         if (f_values[i]) {
           envelopes[i]->noteOff();
+          values[i] = 0;
           f_values[i] = 0;
         }
       }
@@ -224,7 +225,10 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
       digitalWrite(CHARGING_LED, charging_led_state);
       Serial.println("Charging");
     } else {
-      digitalWrite(CHARGING_LED, LOW);
+      if (charging_led_state) {
+        charging_led_state = false;
+        digitalWrite(CHARGING_LED, LOW);
+      }
       for (int i = 0; i < N_FACES; ++i){
         values[i] = (1 & (datum >> i));
         if (values[i] == 1 && f_values[i] == 0){
