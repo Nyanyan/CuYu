@@ -125,6 +125,8 @@ LowPassFilter lpf;
 int f_values[N_FACES];
 int values[N_FACES];
 
+bool charging_led_state = false;
+
 
 // Init ESP Now with fallback
 void InitESPNow() {
@@ -211,7 +213,6 @@ void setup() {
 void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   if (data[0] == 'C' && data[1] == 'u' && data[2] == 'Y' && data[3] == 'u'){
     uint8_t datum = data[4];
-    /*
     if (datum == DATA_CHARGING) {
       for (int i = 0; i < N_FACES; ++i) {
         if (f_values[i]) {
@@ -219,28 +220,28 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
           f_values[i] = 0;
         }
       }
-      digitalWrite(CHARGING_LED, HIGH);
+      charging_led_state = !charging_led_state;
+      digitalWrite(CHARGING_LED, charging_led_state);
       Serial.println("Charging");
     } else {
-    */
-    //digitalWrite(CHARGING_LED, LOW);
-    for (int i = 0; i < N_FACES; ++i){
-      values[i] = (1 & (datum >> i));
-      if (values[i] == 1 && f_values[i] == 0){
-        envelopes[i]->noteOn();
-      } else if (values[i] == 0 && f_values[i] == 1){
-        envelopes[i]->noteOff();
+      digitalWrite(CHARGING_LED, LOW);
+      for (int i = 0; i < N_FACES; ++i){
+        values[i] = (1 & (datum >> i));
+        if (values[i] == 1 && f_values[i] == 0){
+          envelopes[i]->noteOn();
+        } else if (values[i] == 0 && f_values[i] == 1){
+          envelopes[i]->noteOff();
+        }
+        f_values[i] = values[i];
       }
-      f_values[i] = values[i];
+      
+      for (int i = 0; i < N_FACES; ++i){
+        uint8_t bit = 1 & (datum >> i);
+        Serial.print(bit);
+        Serial.print(' ');
+      }
+      Serial.println("");
     }
-    
-    for (int i = 0; i < N_FACES; ++i){
-      uint8_t bit = 1 & (datum >> i);
-      Serial.print(bit);
-      Serial.print(' ');
-    }
-    Serial.println("");
-    //}
   }
 }
 

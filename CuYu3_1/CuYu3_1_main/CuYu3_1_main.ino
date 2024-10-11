@@ -59,6 +59,11 @@ const int hall_pin[N_FACES] = {D3, D2, D4, D7, D1, D5}; // CuYu3
 
 #define DEEP_SLEEP_TIME_THRESHOLD 30000 // ms
 
+#define DATA_CHARGING 0b01000000
+#define CHARGING_LED D10
+#define BATTERY_CHARGING_N_THRESHOLD 10
+int n_battery_charging = 0;
+
 uint8_t last_hall_data_bit = 0b11111111;
 uint8_t hall_data_bit = 0;
 int data_status = STATUS_SEND_FAILED;
@@ -97,6 +102,7 @@ void setup() {
   }
   pinMode(D0, INPUT_PULLUP); // for sleep
   pinMode(D8, INPUT_PULLUP); // for boot
+  pinMode(CHARGING_LED, INPUT_PULLUP); // for charging
   Serial.begin(115200);
 
   //Set device in STA mode to begin with
@@ -133,17 +139,31 @@ void setup() {
   last_turned = millis();
 }
 
+bool battery_charging() {
+  if (!digitalRead(CHARGING_LED)) {
+    if (n_battery_charging < BATTERY_CHARGING_N_THRESHOLD) {
+      ++n_battery_charging;
+    }
+    //Serial.println(n_battery_charging);
+    if (n_battery_charging >= BATTERY_CHARGING_N_THRESHOLD) {
+      return true;
+    }
+  } else {
+    n_battery_charging = 0;
+    //Serial.println(n_battery_charging);
+  }
+  return false;
+}
+
 void loop() {
   // charging
-  /*
   if (battery_charging()) {
     send_data[4] = DATA_CHARGING;
     esp_err_t result = esp_now_send(slave.peer_addr, send_data, 5);
     Serial.println("Charging");
-    delay(2000);
+    delay(1000);
     return;
   }
-  */
 
   // update data
   for (int i = 0; i < N_FACES; ++i){
