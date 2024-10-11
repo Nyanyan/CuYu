@@ -56,6 +56,15 @@
 #define AWAKE_LED 5
 bool awake_state = true;
 
+const int rgb_led[3] = {34, 33, 35}; // RGB
+const int tone_led_colors[N_TONES][3] = { // RGB, false: off
+  { true,  true,  true}, // 呂旋法 (黒)
+  { true, false, false}, // 律旋法 (橙)
+  {false,  true, false}, // 民謡音階 (緑)
+  { true,  true, false}, // 都節音階 (黄)
+  {false, false,  true}, // 琉球音階 (青)
+};
+
 const float tones[N_TONES][N_FACES] = {
   {
     // 呂旋法
@@ -131,7 +140,6 @@ int values[N_FACES];
 
 bool charging_led_state = false;
 
-
 // Init ESP Now with fallback
 void InitESPNow() {
   WiFi.disconnect();
@@ -163,6 +171,9 @@ void set_freq(int tone_idx){
   for (int i = 0; i < N_FACES; ++i){
     Oscils[i]->setFreq(tones[tone_idx][i]);
   }
+  for (int i = 0; i < 3; ++i) {
+    digitalWrite(rgb_led[i], !tone_led_colors[tone_idx][i]);
+  }
 }
 
 void setup() {
@@ -176,8 +187,14 @@ void setup() {
   }
   pinMode(CHARGING_LED, OUTPUT);
   pinMode(AWAKE_LED, OUTPUT);
+  for (int i = 0; i < 3; ++i) {
+    pinMode(rgb_led[i], OUTPUT);
+  }
   digitalWrite(AWAKE_LED, HIGH);
   digitalWrite(CHARGING_LED, LOW);
+  for (int i = 0; i < 3; ++i) {
+    digitalWrite(rgb_led[i], HIGH);
+  }
 
   startMozzi(CONTROL_RATE);
   Oscils[0] = &wOscil;
