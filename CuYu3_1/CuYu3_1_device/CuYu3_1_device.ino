@@ -50,7 +50,11 @@
 #define CONTROL_RATE 128
 
 #define DATA_CHARGING 0b01000000
-#define CHARGING_LED 15
+#define CHARGING_LED 32
+
+#define DATA_DEEPSLEEP 0b10000000
+#define AWAKE_LED 5
+bool awake_state = true;
 
 const float tones[N_TONES][N_FACES] = {
   {
@@ -171,6 +175,8 @@ void setup() {
     pinMode(tone_buttons[i], INPUT_PULLUP);
   }
   pinMode(CHARGING_LED, OUTPUT);
+  pinMode(AWAKE_LED, OUTPUT);
+  digitalWrite(AWAKE_LED, HIGH);
   digitalWrite(CHARGING_LED, LOW);
 
   startMozzi(CONTROL_RATE);
@@ -213,7 +219,7 @@ void setup() {
 void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
   if (data[0] == 'C' && data[1] == 'u' && data[2] == 'Y' && data[3] == 'u'){
     uint8_t datum = data[4];
-    if (datum == DATA_CHARGING) {
+    if (datum == DATA_CHARGING) { // charging
       for (int i = 0; i < N_FACES; ++i) {
         if (f_values[i]) {
           envelopes[i]->noteOff();
@@ -223,11 +229,21 @@ void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
       }
       charging_led_state = !charging_led_state;
       digitalWrite(CHARGING_LED, charging_led_state);
+      awake_state = false;
+      digitalWrite(AWAKE_LED, awake_state);
       Serial.println("Charging");
-    } else {
+    } else if (datum == DATA_DEEPSLEEP) { // sleep
+      awake_state = false;
+      digitalWrite(AWAKE_LED, awake_state);
+      Serial.println("Sleep");
+    } else { // sound
       if (charging_led_state) {
         charging_led_state = false;
         digitalWrite(CHARGING_LED, LOW);
+      }
+      if (!awake_state) {
+        awake_state = true;
+        digitalWrite(AWAKE_LED, awake_state);
       }
       for (int i = 0; i < N_FACES; ++i){
         values[i] = (1 & (datum >> i));

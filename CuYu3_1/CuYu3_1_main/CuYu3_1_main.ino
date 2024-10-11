@@ -57,12 +57,14 @@ const int hall_pin[N_FACES] = {D3, D2, D4, D7, D1, D5}; // CuYu3
 #define STATUS_SEND_SUCCESS 0
 #define STATUS_SEND_FAILED 1
 
+#define DATA_DEEPSLEEP 0b10000000
 #define DEEP_SLEEP_TIME_THRESHOLD 30000 // ms
 
 #define DATA_CHARGING 0b01000000
 #define CHARGING_LED D10
 #define BATTERY_CHARGING_N_THRESHOLD 10
 int n_battery_charging = 0;
+bool battery_charged = false;
 
 uint8_t last_hall_data_bit = 0b11111111;
 uint8_t hall_data_bit = 0;
@@ -155,6 +157,31 @@ bool battery_charging() {
   return false;
 }
 
+void send() {
+  esp_err_t result = esp_now_send(slave.peer_addr, send_data, 5);
+  //esp_err_t result = esp_now_send(slave.peer_addr, &hall_data_bit, sizeof(hall_data_bit));
+  if (result == ESP_OK) {
+    data_status = STATUS_SEND_SUCCESS;
+    //Serial.println("Success");
+  } else {
+    data_status = STATUS_SEND_FAILED;
+    if (result == ESP_ERR_ESPNOW_NOT_INIT) {
+      // How did we get so far!!
+      Serial.println("ESPNOW not Init.");
+    } else if (result == ESP_ERR_ESPNOW_ARG) {
+      Serial.println("Invalid Argument");
+    } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
+      Serial.println("Internal Error");
+    } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
+      Serial.println("ESP_ERR_ESPNOW_NO_MEM");
+    } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
+      Serial.println("Peer not found.");
+    } else {
+      Serial.println("Not sure what happened");
+    }
+  }
+}
+
 void loop() {
   // charging
   if (battery_charging()) {
@@ -162,6 +189,14 @@ void loop() {
     esp_err_t result = esp_now_send(slave.peer_addr, send_data, 5);
     Serial.println("Charging");
     delay(1000);
+    battery_charged = true;
+    return;
+  } else if (battery_charged) {
+    hall_data_bit = 0;
+    last_turned = millis();
+    send_data[4] = hall_data_bit;
+    send();
+    battery_charged = false;
     return;
   }
 
@@ -186,29 +221,10 @@ void loop() {
     Serial.println(hall_data_bit);
     */
     send_data[4] = hall_data_bit;
-    esp_err_t result = esp_now_send(slave.peer_addr, send_data, 5);
-    //esp_err_t result = esp_now_send(slave.peer_addr, &hall_data_bit, sizeof(hall_data_bit));
-    if (result == ESP_OK) {
-      data_status = STATUS_SEND_SUCCESS;
-      //Serial.println("Success");
-    } else {
-      data_status = STATUS_SEND_FAILED;
-      if (result == ESP_ERR_ESPNOW_NOT_INIT) {
-        // How did we get so far!!
-        Serial.println("ESPNOW not Init.");
-      } else if (result == ESP_ERR_ESPNOW_ARG) {
-        Serial.println("Invalid Argument");
-      } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
-        Serial.println("Internal Error");
-      } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
-        Serial.println("ESP_ERR_ESPNOW_NO_MEM");
-      } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
-        Serial.println("Peer not found.");
-      } else {
-        Serial.println("Not sure what happened");
-      }
-    }
+    send();
   } else if (hall_data_bit == 0 && millis() - last_turned > DEEP_SLEEP_TIME_THRESHOLD){ // sleep
+    send_data[4] = DATA_DEEPSLEEP;
+    send();
     deep_sleep();
   }
 
