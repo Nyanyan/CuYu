@@ -50,13 +50,13 @@
 #define CONTROL_RATE 128
 
 #define DATA_CHARGING 0b01000000
-#define CHARGING_LED 32
+#define CHARGING_LED 33
 
 #define DATA_DEEPSLEEP 0b10000000
 #define AWAKE_LED 5
 bool awake_state = true;
 
-const int rgb_led[3] = {34, 33, 35}; // RGB
+const int rgb_led[3] = {26, 27, 32}; // RGB
 const int tone_led_colors[N_TONES][3] = { // RGB, false: off
   { true,  true,  true}, // 呂旋法 (黒)
   { true, false, false}, // 律旋法 (橙)
@@ -176,6 +176,12 @@ void set_freq(int tone_idx){
   }
 }
 
+void rgb_led_off() {
+  for (int i = 0; i < 3; ++i) {
+    digitalWrite(rgb_led[i], HIGH);
+  }
+}
+
 void setup() {
   for (int i = 0; i < N_FACES; ++i){
     f_values[i] = 0;
@@ -192,9 +198,7 @@ void setup() {
   }
   digitalWrite(AWAKE_LED, HIGH);
   digitalWrite(CHARGING_LED, LOW);
-  for (int i = 0; i < 3; ++i) {
-    digitalWrite(rgb_led[i], HIGH);
-  }
+  rgb_led_off();
 
   startMozzi(CONTROL_RATE);
   Oscils[0] = &wOscil;
