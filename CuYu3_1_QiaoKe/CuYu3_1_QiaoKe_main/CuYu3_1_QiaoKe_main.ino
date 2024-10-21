@@ -43,9 +43,9 @@ esp_now_peer_info_t slave;
 #define DELETEBEFOREPAIR 0
 
 #define N_FACES 3
-// WGR
+// WY, GB, RO
 uint8_t hall_data[N_FACES] = {0, 0, 0};
-const int hall_pin[N_FACES] = {D0, D2, D3}; // CuYu3.1 QiaoKe
+const int hall_pin[N_FACES] = {D2, D3, D0}; // CuYu3.1 QiaoKe
 
 #define STATUS_SEND_SUCCESS 0
 #define STATUS_SEND_FAILED 1
