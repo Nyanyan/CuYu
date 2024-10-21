@@ -46,6 +46,7 @@ esp_now_peer_info_t slave;
 // WY, GB, RO
 uint8_t hall_data[N_FACES] = {0, 0, 0};
 const int hall_pin[N_FACES] = {D2, D3, D0}; // CuYu3.1 QiaoKe
+const int hall_bit_shifts[N_FACES] = {1, 0, 2};
 
 #define STATUS_SEND_SUCCESS 0
 #define STATUS_SEND_FAILED 1
@@ -204,9 +205,10 @@ void loop() {
   last_hall_data_bit = hall_data_bit;
   hall_data_bit = 0;
   for (int i = 0; i < N_FACES; ++i){
-    hall_data_bit |= hall_data[i] << (i * 2);
+    //hall_data_bit |= hall_data[i] << (i * 2);
+    hall_data_bit |= hall_data[i] << hall_bit_shifts[i];
   }
-  hall_data_bit |= hall_data_bit << 1;
+  //hall_data_bit |= hall_data_bit << 1;
   if (hall_data_bit != last_hall_data_bit || data_status == STATUS_SEND_FAILED){
     last_turned = millis();
     
