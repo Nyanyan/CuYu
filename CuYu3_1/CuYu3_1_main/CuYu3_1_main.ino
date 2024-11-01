@@ -36,6 +36,8 @@
 #include <WiFi.h>
 #include <esp_wifi.h> // only for esp_wifi_set_channel()
 
+#define USE_CUYU2_HARDWARE true
+
 // Global copy of slave
 esp_now_peer_info_t slave;
 #define CHANNEL 1
@@ -45,8 +47,11 @@ esp_now_peer_info_t slave;
 #define N_FACES 6
 // WYGBRO
 uint8_t hall_data[N_FACES] = {0, 0, 0, 0, 0, 0};
-// const int hall_pin[N_FACES] = {D4, D2, D3, D1, D7, D5}; // CuYu2
+#if USE_CUYU2_HARDWARE
+const int hall_pin[N_FACES] = {D4, D2, D3, D1, D7, D5}; // CuYu2
+#else
 const int hall_pin[N_FACES] = {D3, D2, D4, D7, D1, D5}; // CuYu3
+#endif
 #define FACE_IDX_WHITE 0
 #define FACE_IDX_YELLOW 1
 #define FACE_IDX_GREEN 2
@@ -60,11 +65,13 @@ const int hall_pin[N_FACES] = {D3, D2, D4, D7, D1, D5}; // CuYu3
 #define DATA_DEEPSLEEP 0b10000000
 #define DEEP_SLEEP_TIME_THRESHOLD 30000 // ms
 
+#if !USE_CUYU2_HARDWARE
 #define DATA_CHARGING 0b01000000
 #define CHARGING_LED D10
 #define BATTERY_CHARGING_N_THRESHOLD 10
 int n_battery_charging = 0;
 bool battery_charged = false;
+#endif
 
 uint8_t last_hall_data_bit = 0b11111111;
 uint8_t hall_data_bit = 0;
@@ -104,7 +111,9 @@ void setup() {
   }
   pinMode(D0, INPUT_PULLUP); // for sleep
   pinMode(D8, INPUT_PULLUP); // for boot
+  #if !USE_CUYU2_HARDWARE
   pinMode(CHARGING_LED, INPUT_PULLUP); // for charging
+  #endif
   Serial.begin(115200);
 
   //Set device in STA mode to begin with
@@ -141,6 +150,7 @@ void setup() {
   last_turned = millis();
 }
 
+#if !USE_CUYU2_HARDWARE
 bool battery_charging() {
   if (!digitalRead(CHARGING_LED)) {
     if (n_battery_charging < BATTERY_CHARGING_N_THRESHOLD) {
@@ -156,6 +166,7 @@ bool battery_charging() {
   }
   return false;
 }
+#endif
 
 void send() {
   esp_err_t result = esp_now_send(slave.peer_addr, send_data, 5);
@@ -183,6 +194,7 @@ void send() {
 }
 
 void loop() {
+  #if !USE_CUYU2_HARDWARE
   // charging
   if (battery_charging()) {
     send_data[4] = DATA_CHARGING;
@@ -199,6 +211,7 @@ void loop() {
     battery_charged = false;
     return;
   }
+  #endif
 
   // update data
   for (int i = 0; i < N_FACES; ++i){
