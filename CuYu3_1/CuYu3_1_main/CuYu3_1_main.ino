@@ -36,7 +36,7 @@
 #include <WiFi.h>
 #include <esp_wifi.h> // only for esp_wifi_set_channel()
 
-#define USE_CUYU2_HARDWARE true
+#define USE_CUYU2_HARDWARE false
 
 // Global copy of slave
 esp_now_peer_info_t slave;
