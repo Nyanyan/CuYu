@@ -180,6 +180,11 @@ int values[N_FACES];
 
 bool charging_led_state = false;
 
+uint8_t received_data = 0;
+
+// multi threading
+//TaskHandle_t threads[1];
+
 // Init ESP Now with fallback
 void InitESPNow() {
   WiFi.disconnect();
@@ -272,8 +277,8 @@ void setup() {
   set_rgb_led_tone(tone_idx);
 
   Serial.begin(115200);
-  Serial.println("ESPNow/Basic/Slave Example");
 
+  
   //Set device in AP mode to begin with
   WiFi.mode(WIFI_AP);
   // configure device AP mode
@@ -285,7 +290,20 @@ void setup() {
   // Once ESPNow is successfully Init, we will register for recv CB to
   // get recv packer info.
   esp_now_register_recv_cb(OnDataRecv);
+  
+
+
+  // multi threading
+  //xTaskCreatePinnedToCore(Core0a, "Core0a", 4096, NULL, 3, &threads[0], 0);
 }
+
+/*
+void Core0a(void *args) {
+  for (;;) {
+    audioHook();
+  }
+}
+*/
 
 // callback when data is recv from Master
 void OnDataRecv(const uint8_t *mac_addr, const uint8_t *data, int data_len) {
@@ -360,18 +378,12 @@ AudioOutput updateAudio(){
   int synth = 0;
   for (int i = 0; i < N_FACES; ++i){
     envelopes[i]->update();
-    //synth += (values[i] * Oscils[i]->next() * envelopes[i]->next()) >> 8;
     int gain = envelopes[i]->next();
-    if (values[i] == 1){
-      gain = max(gain, 128);
-    }
-    synth += (gain * Oscils[i]->next()) >> 8;
+    synth += gain * Oscils[i]->next();
   }
-  synth >> 3;
-  synth = lpf.next(synth)>>1;
-  return MonoOutput::fromAlmostNBit(9, synth);
-  //int arev = reverb.next(synth);
-  //return MonoOutput::fromAlmostNBit(9, synth + (arev >> 3));
+  synth >>= 9;
+  synth = lpf.next(synth) >> 1;
+  return MonoOutput::fromAlmostNBit(8, synth);
 }
 
 void loop() {
